@@ -1,0 +1,63 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt update || true
+          sudo apt --yes --no-install-recommends install texlive texlive-fonts-extra texlive-lang-german texlive-latex-extra texlive-plain-generic latexmk
+      - name: Build publications
+        run: |
+          latexmk -pdf publications.tex
+      - name: Upload publications
+        uses: actions/upload-artifact@v2
+        with:
+          name: publications
+          path: publications.pdf
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-20.04
+    permissions:
+      contents: write
+    if: ${{ github.ref == 'refs/heads/master' }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: pages
+      - name: Install dependencies
+        run: |
+          sudo apt update || true
+          sudo apt --yes --no-install-recommends install ghostscript imagemagick
+      - name: Allow PDF conversions
+        # FIXME Ubuntu has blocked PDF conversions in ImageMagick for security reasons
+        run: |
+          sudo sed --in-place '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+      - name: Download publications
+        uses: actions/download-artifact@v2
+        with:
+          name: publications
+          path: pages
+      - name: Create thumbnails
+        run: |
+          convert -colorspace sRGB -density 300 -thumbnail 1920x1920 -quality 85 -background white -alpha remove -alpha off 'pages/publications.pdf[0]' pages/publications.png
+          touch pages/.nojekyll
+      - name: Commit preview
+        run: |
+          cd pages
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add --all .
+          git commit --amend --reset-author --message='Previews for ${{ github.sha }}'
+          git push --force
