@@ -3,11 +3,11 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           persist-credentials: false
       - name: Install dependencies
@@ -18,21 +18,21 @@ jobs:
         run: |
           latexmk -pdf publications.tex
       - name: Upload publications
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: publications
           path: publications.pdf
   publish:
     name: Publish
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     if: ${{ github.ref == 'refs/heads/master' }}
     timeout-minutes: 30
     steps:
       - name: Checkout gh-pages
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: gh-pages
           path: pages
@@ -45,13 +45,13 @@ jobs:
         run: |
           sudo sed --in-place '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
       - name: Download publications
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: publications
           path: pages
       - name: Create thumbnails
         run: |
-          convert -colorspace sRGB -density 300 -thumbnail 1920x1920 -quality 85 -background white -alpha remove -alpha off 'pages/publications.pdf[0]' pages/publications.png
+          convert -colorspace sRGB -density 300 -thumbnail 1920x1920 -quality 90 -background white -alpha remove -alpha off 'pages/publications.pdf[0]' pages/publications.png
           touch pages/.nojekyll
       - name: Commit preview
         run: |
