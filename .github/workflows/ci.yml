@@ -3,13 +3,14 @@ on: [push, pull_request]
 jobs:
   latex:
     name: LaTeX
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
+          show-progress: false
       - name: Install dependencies
         run: |
           sudo apt update || true
@@ -20,7 +21,7 @@ jobs:
         run: |
           sudo sed --in-place '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
       - name: Configure Pages
-        uses: actions/configure-pages@v2
+        uses: actions/configure-pages@v5
       - name: Build publications
         run: |
           latexmk -pdf publications.tex
@@ -32,22 +33,22 @@ jobs:
           mkdir public
           cp publications.pdf publications.png public/
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
   deploy:
     name: Deploy
     needs: latex
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     if: ${{ github.ref == 'refs/heads/master' }}
     permissions:
-      pages: write
       id-token: write
+      pages: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
