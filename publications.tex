@@ -1,3 +1,10 @@
+% FIXME \DocumentMetadata subtly breaks KOMA-Script
+\RequirePackage{pdfmanagement}
+\SetKeys[document/metadata]{
+	pdfversion=1.7,
+	pdfstandard=A-2u,
+}
+
 \documentclass[
 	12pt,
 	a4paper,
@@ -21,7 +28,14 @@
 \usepackage[hyphens]{url}
 \usepackage[hidelinks]{hyperref}
 
-\title{ParCIO Publications}
+\newcommand{\parcioTitle}{ParCIO Publications}
+
+\hypersetup{
+	pdfauthor={ParCIO},
+	pdftitle={\parcioTitle},
+}
+
+\title{\parcioTitle}
 
 \date{\today}
 
