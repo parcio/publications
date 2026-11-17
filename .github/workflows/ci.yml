@@ -3,11 +3,11 @@ on: [push, pull_request]
 jobs:
   latex:
     name: LaTeX
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           show-progress: false
@@ -16,12 +16,8 @@ jobs:
           sudo apt update || true
           sudo apt --yes --no-install-recommends install texlive texlive-fonts-extra texlive-lang-german texlive-latex-extra texlive-plain-generic latexmk
           sudo apt --yes --no-install-recommends install ghostscript imagemagick
-      - name: Allow PDF conversions
-        # FIXME Ubuntu has blocked PDF conversions in ImageMagick for security reasons
-        run: |
-          sudo sed --in-place '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Build publications
         run: |
           latexmk -pdf publications.tex
@@ -33,13 +29,13 @@ jobs:
           mkdir public
           cp publications.pdf publications.png public/
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: public
   deploy:
     name: Deploy
     needs: latex
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     if: ${{ github.ref == 'refs/heads/master' }}
     permissions:
@@ -51,4 +47,4 @@ jobs:
     steps:
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
